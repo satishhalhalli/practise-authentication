@@ -1,7 +1,7 @@
-
-import { useState,useRef } from 'react';
+import { useState,useRef, useContext } from 'react';
 
 import classes from './AuthForm.module.css';
+import AuthContext from '../../Store/auth-context';
 
 const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -9,6 +9,8 @@ const AuthForm = () => {
   const emailInput=useRef();
   const passwordInput=useRef();
 
+
+  const authCtx=useContext(AuthContext);
   const switchAuthModeHandler = () => {
     setIsLogin((prevState) => !prevState);
   };
@@ -17,41 +19,46 @@ const AuthForm = () => {
     const enteredEmail=emailInput.current.value;
     const enteredPassword=passwordInput.current.value;
 
+   
+
     if(isLogin){ 
-      Setloading(true);
+       Setloading(true);
+      
+       fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBUvqi5PJyduweg6GBYJ3g3FtdVS_qvIGA' 
 
-      fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBUvqi5PJyduweg6GBYJ3g3FtdVS_qvIGA',{
-      method:"POST",
-      body:JSON.stringify({
-        email:enteredEmail,
-        password:enteredPassword,
-        returnSecureToken:true,
-      }),
-      headers:{
-        'Content-Type':'application/json'
-      }
-    }).then(res=>{
-      if(res.ok){
-         console.log(res)
-      Setloading(false);
-
-
-
-      }
-      else{
-        Setloading(false);
-          res.json().then(data=>{
-
-          console.log("ELSE",data)
-          alert(data.error.message)
-        })
-      }
-    })
+       ,{
+        method:"POST",
+        body:JSON.stringify({
+          email:enteredEmail,
+          password:enteredPassword,
+          returnSecureToken:true,
+        }),
+        headers:{
+          'Content-Type':'application/json'
+        }
+      }).then(res=>{
+        if(res.ok){
+           Setloading(false);
+          return res.json();
+          
+       
+        }
+        else{
+          Setloading(false);
+            res.json().then(data=>{
+           
+            console.log("ELSE",data)
+            alert(data.error.message)
+          })
+        }
+      }).then((data)=> {
+        authCtx.login(data.idToken);
+      }).catch((err)=>alert(err))
+    
     }else{
         Setloading(true);
-
-
-      fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyBUvqi5PJyduweg6GBYJ3g3FtdVS_qvIGA',{
+        
+        fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyBUvqi5PJyduweg6GBYJ3g3FtdVS_qvIGA',{
         method:"POST",
         body:JSON.stringify({
           email:enteredEmail,
@@ -72,17 +79,19 @@ const AuthForm = () => {
         else{
           Setloading(false);
             res.json().then(data=>{
-
+           
             console.log("ELSE",data)
             alert(data.error.message)
           })
         }
       })
     }
+    }
+      
+    
 
 
-
-  }
+   
 
   return (
     <section className={classes.auth}>
@@ -106,7 +115,7 @@ const AuthForm = () => {
            {loading && <p>LOADING PLZ wait...</p>}
             {isLogin ? 'Create new account' : 'Login with existing account'}
           </button>
-
+         
         </div>
       </form>
     </section>
